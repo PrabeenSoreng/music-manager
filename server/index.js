@@ -10,4 +10,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(morgan("dev"));
 
+app.use("/uploads", express.static("uploads"));
+
 module.exports = app;
