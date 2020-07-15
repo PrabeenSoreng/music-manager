@@ -51,14 +51,22 @@
                     <th scope="col">Action</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr>
-                    <td>1</td>
-                    <td>Demo Title</td>
-                    <td>Wisdom.vue</td>
-                    <td>12/23/13</td>
+                <div
+                  v-if="musicLoading"
+                  class="spinner-border"
+                  style="width: 3rem; height: 3rem"
+                  role="status"
+                >
+                  <span class="sr-only">Loading...</span>
+                </div>
+                <tbody v-else>
+                  <tr v-for="(music, index) in allmusic.data" :key="index">
+                    <td>{{ index + 1 }}</td>
+                    <td>{{ music.title }}</td>
+                    <td>{{ music.artist }}</td>
+                    <td>{{ music.createdAt }}</td>
                     <td>
-                      <button class="btn btn-info">Delete</button>
+                      <button class="btn btn-info" @click="deleteMusic(music._id)">Delete</button>
                     </td>
                   </tr>
                 </tbody>
@@ -70,3 +78,33 @@
     </div>
   </section>
 </template>
+
+<script>
+export default {
+  data() {
+    return {
+      allmusic: [],
+      musicLoading: false
+    };
+  },
+  methods: {
+    async getAllMusics() {
+      this.musicLoading = true;
+      try {
+        let data = await this.$axios.$get("/api/music");
+        console.log(data);
+        this.allmusic = data;
+        this.musicLoading = false;
+      } catch (err) {
+        this.musicLoading = false;
+        // swal("Error", "Error Fetching Musics", "error");
+      }
+    },
+    addNewMusic() {},
+    deleteMusic(id) {}
+  },
+  created() {
+    this.getAllMusics();
+  }
+};
+</script>
