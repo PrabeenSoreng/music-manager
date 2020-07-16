@@ -3,29 +3,55 @@
     <div class="container mb-4">
       <div class="row">
         <div class="col-md-12">
-          <div class="card">
+          <div class="card" v-if="addState">
             <div class="card-body">
               <div class="card-title mb-4">
                 <h4>Add Music</h4>
               </div>
-              <form>
+              <form @submit.prevent="addNewMusic">
                 <div class="form-group">
                   <label for="title">Title</label>
-                  <input type="text" id="title" class="form-control" name="title" />
+                  <input
+                    type="text"
+                    id="title"
+                    class="form-control"
+                    v-model="musicDetails.title"
+                  />
                 </div>
                 <div class="form-group">
                   <label for="artist">Artist</label>
-                  <input type="text" id="artist" class="form-control" name="artist" />
+                  <input
+                    type="text"
+                    id="artist"
+                    class="form-control"
+                    v-model="musicDetails.artist"
+                  />
                 </div>
                 <div class="form-group">
                   <label for="music">Music</label>
                   <div class="custom-file">
-                    <input type="file" class="custom-file-input" id="customFile" />
-                    <label for="customFile" class="custom-file-label">Choose file</label>
+                    <input
+                      type="file"
+                      class="custom-file-input"
+                      id="customFile"
+                      ref="file"
+                      v-on:change="handleFileUpload()"
+                    />
+                    <label for="customFile" class="custom-file-label"
+                      >Choose file</label
+                    >
                   </div>
                 </div>
                 <div class="form-group">
-                  <button class="btn btn-primary">Submit</button>
+                  <button class="btn btn-primary" :disabled="isDisabled">
+                    <span
+                      class="spinner-border spinner-border-sm"
+                      v-if="addLoading"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    Submit
+                  </button>
                 </div>
               </form>
             </div>
@@ -38,7 +64,9 @@
         <div class="col-md-12">
           <div class="card bg-light p-1 showdow-sm">
             <div class="card-title">
-              <button class="btn btn-info m-3">Add Music</button>
+              <button class="btn btn-info m-3" @click="initForm">
+                {{ addState ? "Cancel" : "Add New Music" }}
+              </button>
             </div>
             <div class="card-body">
               <table class="table">
@@ -66,7 +94,12 @@
                     <td>{{ music.artist }}</td>
                     <td>{{ music.createdAt }}</td>
                     <td>
-                      <button class="btn btn-info" @click="deleteMusic(music._id)">Delete</button>
+                      <button
+                        class="btn btn-info"
+                        @click="deleteMusic(music._id)"
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 </tbody>
@@ -83,24 +116,79 @@
 export default {
   data() {
     return {
+      musicDetails: {
+        title: "",
+        artist: "",
+        music: ""
+      },
       allmusic: [],
-      musicLoading: false
+      musicLoading: false,
+      isValid: false,
+      addLoading: false,
+      addState: false
     };
   },
+  computed: {
+    isDisabled: function() {
+      if (
+        this.musicDetails.title === "" ||
+        this.musicDetails.artist === "" ||
+        this.musicDetails.music === ""
+      ) {
+        return !this.isValid;
+      }
+    }
+  },
   methods: {
+    handleFileUpload() {
+      this.musicDetails.music = this.$refs.file.files[0];
+      console.log(this.musicDetails.music.type);
+    },
+    initForm() {
+      this.addState = !this.addState;
+    },
     async getAllMusics() {
       this.musicLoading = true;
       try {
         let data = await this.$axios.$get("/api/music");
-        console.log(data);
+        // console.log(data);
         this.allmusic = data;
         this.musicLoading = false;
       } catch (err) {
         this.musicLoading = false;
-        // swal("Error", "Error Fetching Musics", "error");
+        swal("Error", "Error Fetching Musics", "error");
       }
     },
-    addNewMusic() {},
+    addNewMusic() {
+      let types = /(\.|\/)(mp3|mp4)$/i;
+      if (
+        types.test(this.musicDetails.music.type) ||
+        types.test(this.musicDetails.music.name)
+      ) {
+        let formData = new FormData();
+        formData.append("title", this.musicDetails.title);
+        formData.append("artist", this.musicDetails.artist);
+        formData.append("music", this.musicDetails.music);
+        this.addLoading = true;
+        this.$axios
+          .$post("/api/music", formData)
+          .then(response => {
+            console.log(response);
+            this.addLoading = false;
+            this.musicDetails = {};
+            this.getAllMusics();
+            swal("Success", "New Music Added", "success");
+          })
+          .catch(err => {
+            this.addLoading = false;
+            swal("Error", "Something went wrong", "error");
+            return !this.isValid;
+          });
+      } else {
+        alert("Invalid file type");
+        return !this.isValid;
+      }
+    },
     deleteMusic(id) {}
   },
   created() {
