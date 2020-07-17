@@ -189,7 +189,31 @@ export default {
         return !this.isValid;
       }
     },
-    deleteMusic(id) {}
+    deleteMusic(id) {
+      swal({
+        title: "Are you sure?",
+        text: "Once deleted, you will not be able to recover this Music!",
+        icon: "warning",
+        buttons: true,
+        dangerMode: true
+      }).then(willDelete => {
+        if (willDelete) {
+          this.$axios
+            .$delete("/api/music/" + id)
+            .then(response => {
+              this.getAllMusics();
+              swal("Poof! Your music file has been deleted!", {
+                icon: "success"
+              });
+            })
+            .catch(err => {
+              swal("Error", "Something wend wrong", "error");
+            });
+        } else {
+          swal("Your Music file is safe!");
+        }
+      });
+    }
   },
   created() {
     this.getAllMusics();
