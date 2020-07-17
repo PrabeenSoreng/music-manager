@@ -24,7 +24,14 @@ export default {
         content: process.env.npm_package_description || ""
       }
     ],
-    link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }]
+    link: [
+      { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+      {
+        rel: "stylesheet",
+        type: "text/css",
+        href: "https://use.fontawesome.com/releases/v5.3.1/css/all.css"
+      }
+    ]
   },
   /*
    ** Global CSS
